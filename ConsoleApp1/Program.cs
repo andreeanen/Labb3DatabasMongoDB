@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson;
+using MongoDB.Bson.IO;
 using MongoDB.Driver;
 using System;
 
@@ -13,7 +14,23 @@ namespace Labb3
             database.DropCollection("restaurants");
             var restaurantsCollection = database.GetCollection<BsonDocument>("restaurants");
 
-            //Create bson array 
+            PopulateRestaurantsCollection(restaurantsCollection);            
+
+            PrintRestaurants(restaurantsCollection);
+
+            PrintCafes(restaurantsCollection);
+
+            UpdateStarsForXYZCoffeeBar(restaurantsCollection);
+
+            UpdateNameForCookiesShop(restaurantsCollection);
+
+            AggregateFourPlusStarsRestaurants(restaurantsCollection);
+
+            Console.ReadKey(true);
+        }
+
+        private static void PopulateRestaurantsCollection(IMongoCollection<BsonDocument> restaurantsCollection)
+        {
             BsonDocument[] restaurants = new BsonDocument[]
             {
                 new BsonDocument
@@ -53,63 +70,79 @@ namespace Labb3
                 }
             };
             restaurantsCollection.InsertMany(restaurants);
+        }
 
-            //Print out the restaurants
-            //var restaurantsFind = restaurantsCollection.Find(new BsonDocument());
-            //foreach (var restaurant in restaurantsFind.ToEnumerable())
-            //{
-            //    Console.WriteLine(restaurant.ToString()); //or
-            //    //Console.WriteLine(restaurant.ToJson());
-            //}
+        private static void AggregateFourPlusStarsRestaurants(IMongoCollection<BsonDocument> restaurantsCollection)
+        {
+            var Matching = new BsonDocument {
+                {
+                    "$match", new BsonDocument
+                    {
+                         { "stars", new BsonDocument
+                            {
+                                {"$gte", 4 }
+                            }
+                         }
+                    }
+                }
+            };
 
-            //Filter restaurants that hace "Cafe" among its categories
-            //var filterCafe = Builders<BsonDocument>.Filter.Eq("categories", "Cafe");
-            //var projectionCafe = Builders<BsonDocument>.Projection.Include("name").Exclude("_id");
-            //var resultCafe = restaurantsCollection.Find<BsonDocument>(filterCafe).Project(projectionCafe).ToList();
-            //foreach (var restaurant in resultCafe)
-            //{
-            //    Console.WriteLine(restaurant.ToString());
-            //}
+            var Projection = new BsonDocument(
+                "$project", new BsonDocument 
+                {
+                    {"_id", 0},
+                    {"name", "$name"},
+                    {"stars","$stars"}
+                }
+            );
 
-            //Skriv en metod som uppdaterar genom increment “stars” för den restaurang 
-            //som har “name” “XYZ Coffee Bar” så att nya värdet på stars blir 6.
-            //OBS! Ni ska använda increment . 
-            //OBS! Skriv ut alla restauranger igen, så att jag kan se att “stars” blivit 6, för denna restaurang när jag kör ert program. 
+            var pipeline = new[] { Matching, Projection };
+            var fourPlusStarsRestaurants = restaurantsCollection.Aggregate<BsonDocument>(pipeline).ToList();
 
-            //var filterInc = Builders<BsonDocument>.Filter.Eq("name", "XYZ Coffee Bar");
-            //var updateInc = Builders<BsonDocument>.Update.Inc("stars", 1);
-            //var result = restaurantsCollection.UpdateOne(filterInc, updateInc);
-            //Console.WriteLine("List with restaurants after increasing number of stars for XYZ Coffee Bar:");
-            //foreach (var restaurant in restaurantsCollection.Find(new BsonDocument()).ToEnumerable())
-            //{
-            //    Console.WriteLine(restaurant.ToString());
-            //}
-
-            //Skriv en metod som uppdaterar “name” för "456 Cookies Shop" till “123 Cookies Heaven” 
-            //OBS! Skriv ut alla restauranger igen, så att jag kan se att namnet ändrats för denna restaurang när jag kör ert program. 
-
-            //var filterName = Builders<BsonDocument>.Filter.Eq("name", "456 Cookies Shop");
-            //var updateName = Builders<BsonDocument>.Update.Set("name", "123 Cookies Heaven");
-            //var resultUpdateName = restaurantsCollection.UpdateOne(filterName, updateName);
-            //foreach (var restaurant in restaurantsCollection.Find(new BsonDocument()).ToEnumerable())
-            //{
-            //    Console.WriteLine(restaurant.ToString());
-            //}
-
-
-            //Skriv en metod som aggregerar en lista med alla restauranger som har 4 eller fler “stars” och skriver ut endast “name” och “stars” 
-
-            var filterStars = Builders<BsonDocument>.Filter.AnyGte("stars", 4);
-            var projectionsStars = Builders<BsonDocument>.Projection.Include("name").Include("stars").Exclude("_id");
-            var resultStars = restaurantsCollection.Find(filterStars).Project(projectionsStars).ToList();
-            foreach (var restaurant in resultStars)
+            Console.WriteLine("\n\nRestaurants with four or more stars:");
+            foreach (var restaurant in fourPlusStarsRestaurants)
             {
                 Console.WriteLine(restaurant.ToString());
             }
+        }
 
+        private static void UpdateNameForCookiesShop(IMongoCollection<BsonDocument> restaurantsCollection)
+        {
+            var filterName = Builders<BsonDocument>.Filter.Eq("name", "456 Cookies Shop");
+            var updateName = Builders<BsonDocument>.Update.Set("name", "123 Cookies Heaven");
+            var resultUpdateName = restaurantsCollection.UpdateOne(filterName, updateName);
+            Console.WriteLine("\n\nList with restaurants after changing name for 456 Cookies Shop:");
+            PrintRestaurants(restaurantsCollection);
+        }
 
+        private static void UpdateStarsForXYZCoffeeBar(IMongoCollection<BsonDocument> restaurantsCollection)
+        {
+            var filterInc = Builders<BsonDocument>.Filter.Eq("name", "XYZ Coffee Bar");
+            var updateInc = Builders<BsonDocument>.Update.Inc("stars", 1);
+            var result = restaurantsCollection.UpdateOne(filterInc, updateInc);
+            Console.WriteLine("\n\nList with restaurants after increasing number of stars for XYZ Coffee Bar:");
+            PrintRestaurants(restaurantsCollection);
+        }
 
-            Console.ReadKey(true);
+        private static void PrintCafes(IMongoCollection<BsonDocument> restaurantsCollection)
+        {
+            var filterCafe = Builders<BsonDocument>.Filter.Eq("categories", "Cafe");
+            var projectionCafe = Builders<BsonDocument>.Projection.Include("name").Exclude("_id");
+            var resultCafe = restaurantsCollection.Find<BsonDocument>(filterCafe).Project(projectionCafe).ToList();
+            Console.WriteLine("\n\nCafes: ");
+            foreach (var restaurant in resultCafe)
+            {
+                Console.WriteLine(restaurant.ToString());
+            }
+        }
+
+        private static void PrintRestaurants(IMongoCollection<BsonDocument> restaurantsCollection)
+        {
+            var restaurantsFind = restaurantsCollection.Find(new BsonDocument());
+            foreach (var restaurant in restaurantsFind.ToEnumerable())
+            {
+                Console.WriteLine(restaurant.ToJson(new JsonWriterSettings { Indent = true }));
+            }
         }
     }
 }
