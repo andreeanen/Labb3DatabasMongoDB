@@ -88,14 +88,24 @@ namespace Labb3
             //Skriv en metod som uppdaterar “name” för "456 Cookies Shop" till “123 Cookies Heaven” 
             //OBS! Skriv ut alla restauranger igen, så att jag kan se att namnet ändrats för denna restaurang när jag kör ert program. 
 
-            var filterName = Builders<BsonDocument>.Filter.Eq("name", "456 Cookies Shop");
-            var updateName = Builders<BsonDocument>.Update.Set("name", "123 Cookies Heaven");
-            var resultUpdateName = restaurantsCollection.UpdateOne(filterName, updateName);
-            foreach (var restaurant in restaurantsCollection.Find(new BsonDocument()).ToEnumerable())
+            //var filterName = Builders<BsonDocument>.Filter.Eq("name", "456 Cookies Shop");
+            //var updateName = Builders<BsonDocument>.Update.Set("name", "123 Cookies Heaven");
+            //var resultUpdateName = restaurantsCollection.UpdateOne(filterName, updateName);
+            //foreach (var restaurant in restaurantsCollection.Find(new BsonDocument()).ToEnumerable())
+            //{
+            //    Console.WriteLine(restaurant.ToString());
+            //}
+
+
+            //Skriv en metod som aggregerar en lista med alla restauranger som har 4 eller fler “stars” och skriver ut endast “name” och “stars” 
+
+            var filterStars = Builders<BsonDocument>.Filter.AnyGte("stars", 4);
+            var projectionsStars = Builders<BsonDocument>.Projection.Include("name").Include("stars").Exclude("_id");
+            var resultStars = restaurantsCollection.Find(filterStars).Project(projectionsStars).ToList();
+            foreach (var restaurant in resultStars)
             {
                 Console.WriteLine(restaurant.ToString());
             }
-
 
 
 
