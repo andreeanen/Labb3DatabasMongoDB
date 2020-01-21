@@ -63,15 +63,27 @@ namespace Labb3
             //}
 
             //Filter restaurants that hace "Cafe" among its categories
-            var filterCafe = Builders<BsonDocument>.Filter.Eq("categories", "Cafe");
-            var projectionCafe = Builders<BsonDocument>.Projection.Include("name").Exclude("_id");
-            var resultCafe = restaurantsCollection.Find<BsonDocument>(filterCafe).Project(projectionCafe).ToList();
-            foreach (var restaurant in resultCafe)
+            //var filterCafe = Builders<BsonDocument>.Filter.Eq("categories", "Cafe");
+            //var projectionCafe = Builders<BsonDocument>.Projection.Include("name").Exclude("_id");
+            //var resultCafe = restaurantsCollection.Find<BsonDocument>(filterCafe).Project(projectionCafe).ToList();
+            //foreach (var restaurant in resultCafe)
+            //{
+            //    Console.WriteLine(restaurant.ToString());
+            //}
+
+            //Skriv en metod som uppdaterar genom increment “stars” för den restaurang 
+            //som har “name” “XYZ Coffee Bar” så att nya värdet på stars blir 6.
+            //OBS! Ni ska använda increment . 
+            //OBS! Skriv ut alla restauranger igen, så att jag kan se att “stars” blivit 6, för denna restaurang när jag kör ert program. 
+
+            var filterInc = Builders<BsonDocument>.Filter.Eq("name", "XYZ Coffee Bar");
+            var update = Builders<BsonDocument>.Update.Inc("stars", 1);
+            var result = restaurantsCollection.UpdateOne(filterInc, update);
+
+            foreach (var restaurant in restaurantsCollection.Find(new BsonDocument()).ToEnumerable())
             {
                 Console.WriteLine(restaurant.ToString());
             }
-
-
 
 
 
