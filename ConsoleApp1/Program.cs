@@ -76,17 +76,25 @@ namespace Labb3
             //OBS! Ni ska använda increment . 
             //OBS! Skriv ut alla restauranger igen, så att jag kan se att “stars” blivit 6, för denna restaurang när jag kör ert program. 
 
-            var filterInc = Builders<BsonDocument>.Filter.Eq("name", "XYZ Coffee Bar");
-            var update = Builders<BsonDocument>.Update.Inc("stars", 1);
-            var result = restaurantsCollection.UpdateOne(filterInc, update);
+            //var filterInc = Builders<BsonDocument>.Filter.Eq("name", "XYZ Coffee Bar");
+            //var updateInc = Builders<BsonDocument>.Update.Inc("stars", 1);
+            //var result = restaurantsCollection.UpdateOne(filterInc, updateInc);
+            //Console.WriteLine("List with restaurants after increasing number of stars for XYZ Coffee Bar:");
+            //foreach (var restaurant in restaurantsCollection.Find(new BsonDocument()).ToEnumerable())
+            //{
+            //    Console.WriteLine(restaurant.ToString());
+            //}
 
+            //Skriv en metod som uppdaterar “name” för "456 Cookies Shop" till “123 Cookies Heaven” 
+            //OBS! Skriv ut alla restauranger igen, så att jag kan se att namnet ändrats för denna restaurang när jag kör ert program. 
+
+            var filterName = Builders<BsonDocument>.Filter.Eq("name", "456 Cookies Shop");
+            var updateName = Builders<BsonDocument>.Update.Set("name", "123 Cookies Heaven");
+            var resultUpdateName = restaurantsCollection.UpdateOne(filterName, updateName);
             foreach (var restaurant in restaurantsCollection.Find(new BsonDocument()).ToEnumerable())
             {
                 Console.WriteLine(restaurant.ToString());
             }
-
-
-
 
 
 
